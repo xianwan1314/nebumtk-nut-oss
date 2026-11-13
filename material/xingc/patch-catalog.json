@@ -1,0 +1,66 @@
+{
+  "patches": [
+    {
+      "category": "xingc",
+      "human_name": "xingc-rename-veify-command",
+      "id": "xingc-rename-veify-command",
+      "ida_context": "auto-detected; layout=unlock2",
+      "locators": [
+        {
+          "kind": "signature",
+          "layout": "unlock2",
+          "needle_hex": "0a00766569667900",
+          "partition": "lk",
+          "replace_at": 2,
+          "replace_len": 5
+        }
+      ],
+      "patch_hex": "78696e6763",
+      "principle": "Rename the stock veify site to xingc (same length).",
+      "replace_len": 5,
+      "risk": "high",
+      "summary": "Detected from the stock LK image by prepare_xingc_lk."
+    },
+    {
+      "category": "xingc",
+      "human_name": "xingc-rename-veify-log-marker",
+      "id": "xingc-rename-veify-log-marker",
+      "ida_context": "auto-detected; layout=log",
+      "locators": [
+        {
+          "kind": "signature",
+          "layout": "log",
+          "needle_hex": "5b46415354424f4f545d2573207665696679207374617274",
+          "partition": "lk",
+          "replace_at": 13,
+          "replace_len": 5
+        }
+      ],
+      "patch_hex": "78696e6763",
+      "principle": "Rename the stock veify site to xingc (same length).",
+      "replace_len": 5,
+      "risk": "high",
+      "summary": "Detected from the stock LK image by prepare_xingc_lk."
+    },
+    {
+      "category": "xingc",
+      "dynamic": "hedgehog_public_key_blob",
+      "human_name": "xingc-replace-hedgehog-public-key",
+      "id": "xingc-replace-hedgehog-public-key",
+      "ida_context": "auto-detected; layout=unlock2",
+      "locators": [
+        {
+          "kind": "seed_auth_profile",
+          "length": 520,
+          "original_sha256": "8d56af28341b535526b818b64f72a1e119c5c19d2ba7397e0e5e66d0cc25cbc9",
+          "partition": "lk",
+          "profile": "hedgehog"
+        }
+      ],
+      "principle": "The device then verifies the XinGC token with the operator key.",
+      "replace_len": 520,
+      "risk": "high",
+      "summary": "Replace the hedgehog seed_auth public key with the operator key."
+    }
+  ]
+}

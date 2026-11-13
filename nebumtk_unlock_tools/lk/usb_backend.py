@@ -41,7 +41,11 @@ def _candidate_dll_paths() -> list[Path]:
         import libusb
 
         pkg = Path(libusb.__file__).resolve().parent
+        # PyPI ``libusb`` ships the DLL under ``_platform/_windows/<arch>``;
+        # older/local layouts may use ``_platform/windows/<arch>``.
+        paths.append(pkg / "_platform" / "_windows" / arch / "libusb-1.0.dll")
         paths.append(pkg / "_platform" / "windows" / arch / "libusb-1.0.dll")
+        paths.append(pkg / "_platform" / "_windows" / "libusb-1.0.dll")
         paths.append(pkg / "libusb-1.0.dll")
     except ImportError:
         pass

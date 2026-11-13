@@ -1518,14 +1518,13 @@ class MainWindow(QMainWindow):
         # performs the finishing steps — forbidding it left test mode unable to
         # do the thing it exists for.  The test-mode confirmation still runs, and
         # every write boundary below still revalidates.
-        one_click_ready = bool(adb_ready and has_preload and has_xingc)
+        one_click_ready = bool(adb_ready and has_xingc)
         one_click_blocked = (
             [] if one_click_ready else ["需要已识别的 Vivo ADB 设备和目标机型"]
         )
         self.auto_flow_button.setEnabled(one_click_ready)
-        self.sakisu_root_checkbox.setEnabled(one_click_ready and not busy)
-        if not one_click_ready:
-            self.sakisu_root_checkbox.setChecked(False)
+        self.sakisu_root_checkbox.setEnabled(False)
+        self.sakisu_root_checkbox.setChecked(False)
         self.auto_flow_button.setToolTip(
             "已就绪" if one_click_ready else "；".join(one_click_blocked)
         )
@@ -1541,7 +1540,7 @@ class MainWindow(QMainWindow):
             )
             self.vivo_preflight_label.style().unpolish(self.vivo_preflight_label)
             self.vivo_preflight_label.style().polish(self.vivo_preflight_label)
-        self.root_button.setEnabled(adb_ready and has_preload)
+        self.root_button.setEnabled(False)
         # 保存恢复点 backs up whatever the profile's workflow lists, and the
         # flow itself refuses to continue when that list has no `lk` in it.
         # Asking the capability set instead disabled this row on OPPO, whose
@@ -2523,11 +2522,7 @@ class MainWindow(QMainWindow):
             return
         if not self._require_mode("adb"):
             return
-        need_preload = flow_kind == "root_escalation"
-        preload = self._resolve_preload_override(required=need_preload)
-        if need_preload and preload is None:
-            return
-        self._start_flow(flow_kind, preload_override=preload)
+        self._start_flow(flow_kind, preload_override=None)
 
     def _start_write(self) -> None:
         if self._operation_active():
@@ -2538,7 +2533,7 @@ class MainWindow(QMainWindow):
         if profile is None:
             QMessageBox.warning(self, "NEBUMTK", "请选择当前机型")
             return
-        preload = self._resolve_preload_override(required=False)
+        preload = None
         if profile.brand.lower() == "honor":
             context = self._capture_device_action_context()
             if context is None:
@@ -2642,29 +2637,15 @@ class MainWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self, "NEBUMTK", f"一键流程前置检查失败: {exc}")
             return
-        preload = self._resolve_preload_override(required=True)
-        if preload is None:
-            return
+        preload = None
         context = self._capture_device_action_context()
         if context is None:
             return
-        # Opt-in, and only when the operator ticked it: the patched init_boot is
-        # written to the slot the device is handed back to, never to both.
-        install_sakisu_root = bool(
-            self.sakisu_root_checkbox.isEnabled()
-            and self.sakisu_root_checkbox.isChecked()
-        )
-        sakisu_kmi = self.images_page.sakisu_kmi_combo.currentText().strip()
-        candidate = Path(self.images_page.sakisu_candidate_edit.text().strip())
-        sakisu_init_boot = candidate if candidate.is_file() else None
-        if install_sakisu_root and sakisu_init_boot is None and not sakisu_kmi:
-            QMessageBox.warning(
-                self,
-                "NEBUMTK",
-                "已勾选写入 SakiSU init_boot，但没有可用的补丁镜像：请先在"
-                "「镜像与恢复」页修补并选择 init_boot，或在那里选定 KMI 让本次流程现打。",
-            )
-            return
+        # Root installation is not part of this build: the operator already has
+        # root, and the one-click workflow never writes a SakiSU init_boot.
+        install_sakisu_root = False
+        sakisu_kmi = ""
+        sakisu_init_boot = None
         self._confirm_and_start_flow(
             DestructiveFlowRequest(
                 "vivo_complete_unlock",

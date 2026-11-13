@@ -166,18 +166,11 @@ class FlowContext:
         )
 
     def escalate_root(self, profile: DeviceProfile | None = None, preload_override: Path | str | None = None) -> None:
-        assert self.adb is not None
-        protected = self.resolve_preload(profile, preload_override) if profile is not None else None
-        escalator = self._make_escalator(profile, protected)
-
-        def before_attempt() -> None:
-            if protected is None:
-                return
-            self.ensure_not_cancelled()
-            self.set_stage("推送提权文件…")
-            self.push_preload(protected, profile.preload_remote)
-
-        escalator.escalate(before_attempt=before_attempt if protected is not None else None)
+        del profile, preload_override
+        raise VerificationError(
+            "此构建不执行提权；请先在设备上取得 root，并确认 "
+            "`adb shell su -c id` 返回 uid=0。"
+        )
 
     def partition_ops(self, profile: DeviceProfile, serial: str) -> PartitionOps:
         assert self.adb is not None
@@ -218,7 +211,14 @@ class FlowContext:
             return preload
         raise VerificationError("内置受保护 preload 不可用")
 
-    def ensure_root(self, profile: DeviceProfile, preload_override: Path | str | None) -> None:
+    def ensure_root(self, profile: DeviceProfile, preload_override: Path | str | None = None) -> None:
+        """Require an already-rooted device; this build never escalates.
+
+        Temporary root is fine, but ``su`` must answer repeatedly. No payload
+        is pushed and no root manager is installed.
+        """
+
+        del preload_override
         assert self.adb is not None
         self.set_stage("确认 root 权限…")
         if self.su_provider is not None and self.su_provider.kind == "custom":
@@ -229,47 +229,46 @@ class FlowContext:
                 raise VerificationError("custom su did not provide uid 0")
             self.set_stage("root 已获取")
             return
-        escalator = self._make_escalator(profile)
-        try:
-            if escalator.verify_root():
-                self.set_stage("root 已获取")
-                self.callbacks.log("已有 root")
-                return
-        except Exception as exc:
-            # Never silent: swallowing this left a run with no root probe at all
-            # and no explanation for it in the log.
-            self.callbacks.log(f"root 预检未完成，将直接提权: {exc}")
 
-        # A profile-specific executable wins.  If it is unavailable, try the
-        # global shell ``su`` before considering any user override.
-        if profile.su_path != "su":
-            self.adb.su_path = "su"
-            self.su_provider = SuProvider("protected", "su")
+        candidates: list[str] = []
+        for candidate in (
+            str(self.adb.su_path or "").strip(),
+            str(getattr(profile, "su_path", "") or "").strip(),
+            "su",
+        ):
+            if candidate and candidate not in candidates:
+                candidates.append(candidate)
+
+        for candidate in candidates:
             try:
-                if self._make_escalator(profile).verify_root():
-                    self.set_stage("root 已获取")
-                    return
-            except Exception:
-                pass
+                first = probe_custom_su(self.adb, candidate)
+                second = probe_custom_su(self.adb, candidate)
+            except Exception as exc:
+                self.callbacks.log(f"su 探测失败 {candidate}: {exc}")
+                continue
+            if first.uid == 0 and second.uid == 0:
+                self.adb.su_path = candidate
+                self.su_provider = SuProvider("protected", candidate)
+                self.set_stage("root 已获取")
+                self.callbacks.log(f"已有 root: {candidate}")
+                return
 
-        # Custom su is an emergency compatibility fallback only.
         if self.settings.test_mode_enabled:
-            custom = self.settings.custom_su
-            if custom not in {profile.su_path, "su"}:
+            custom = str(self.settings.custom_su or "").strip()
+            if custom and custom not in candidates:
                 try:
-                    result = probe_custom_su(self.adb, custom)
-                    if result.uid == 0:
+                    if probe_custom_su(self.adb, custom).uid == 0:
                         self.adb.su_path = custom
                         self.su_provider = SuProvider("custom", custom)
                         self.set_stage("root 已获取")
                         return
-                except Exception:
-                    pass
+                except Exception as exc:
+                    self.callbacks.log(f"custom su 探测失败: {exc}")
 
-        self.adb.su_path = profile.su_path
-        self.su_provider = SuProvider("protected", profile.su_path)
-        self.callbacks.log("未 root，重新提权")
-        self.escalate_root(profile, preload_override)
+        raise VerificationError(
+            "设备未 root；此构建不执行提权。请先自行取得 root，"
+            "并确认 `adb shell su -c id` 返回 uid=0。"
+        )
 
     def cleanup_materialized_preloads(self) -> None:
         loader_error: Exception | None = None

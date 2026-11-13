@@ -10,6 +10,26 @@ Last reconciled: 2026-11-04 (open-source conversion).
 
 另一个 baseline 在 `baseline/1.1`（tag `v1.1.0`），对应最后实际发货的离线 1.1。
 
+## Personal no-escalation build
+
+当前工作区还包含一个**个人构建**（不是默认发行形态）：
+
+- 运行时不做 payload 提权：`ensure_root()` 只探测已有 `su`（连续两次 `uid=0`），
+  `escalate_root()` 直接报错；不再推送 preload。
+- UI 隐藏“临时 Root / 获取临时权限”和 SakiSU root 安装；一键 Vivo 只使用现有 root。
+- SakiSU 上游二进制未获取，镜像页的 SakiSU 页签隐藏；代码保留但不可达。
+- 机型目录已用 `local-dev/` 的本地密钥重签，仍有 23 个档案。
+- 构建步骤与踩坑记录见 [PERSONAL_BUILD.md](PERSONAL_BUILD.md)；产物在
+  `dist/nebumtk_unlock_tools.dist/`，`material/xingc` 与 `images` 随包放在 exe 旁边。
+- 个人构建的 `scripts/build.ps1` 不再调用 audit；`tools/audit_distribution.py`
+  保留给公开发布时手动执行。
+- 新 profile（没有 `settings.json`）默认开启测试模式，顶部显示机型/运行模板；
+  已有 settings.json 保留原值，可在设置里关闭。
+- 解锁操作、复制到其他电脑、失败处理见 [UNLOCK-GUIDE.md](UNLOCK-GUIDE.md)；
+  dist 里也带有 `UNLOCK-GUIDE.md`。
+- 该目录含签名私钥，**不是可公开分发的 release**；对外分发前必须把
+  `material/xingc` 移出，或换成不随包分发的素材。
+
 ## Licensing
 
 代码以 **AGPL-3.0-only** 发布（`LICENSE`，全文取自 FSF/SPDX 原文）；第三方组件的许可以

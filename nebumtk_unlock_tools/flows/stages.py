@@ -325,9 +325,9 @@ class RootEscalationFlow:
         ctx = self.ctx
         ctx.init_clients(device.serial, need_adb=True, need_fastboot=False, profile=profile)
         ctx.ensure_not_cancelled()
-        ctx.set_progress(60, "提权")
-        ctx.escalate_root(profile, self.preload_override)
-        ctx.set_progress(100, "提权完成")
+        ctx.set_progress(60, "确认 root")
+        ctx.ensure_root(profile)
+        ctx.set_progress(100, "root 已确认")
 
 
 class BackupExportFlow:
@@ -479,7 +479,7 @@ class VivoCompleteUnlockFlow:
             raise VerificationError("Xingc 完成后 fastboot 未报告 unlocked，已终止运行")
 
     def run(self, device: ConnectedDevice, profile: DeviceProfile) -> None:
-        _require_profile_capabilities(profile, "preload", "xingc")
+        _require_profile_capabilities(profile, "xingc")
         ctx = self.ctx
         ctx.init_clients(device.serial, need_adb=True, need_fastboot=True, profile=profile)
 
@@ -487,8 +487,8 @@ class VivoCompleteUnlockFlow:
         InternalUblPatcher.availability_check()
         ctx.ensure_not_cancelled()
 
-        ctx.set_progress(12, "提权")
-        ctx.escalate_root(profile, self.preload_override)
+        ctx.set_progress(12, "确认 root")
+        ctx.ensure_root(profile)
 
         ctx.set_progress(24, "备份活动槽分区")
         backups, initial_slot = _backup_lk(ctx, device, profile, self.preload_override)
@@ -496,9 +496,7 @@ class VivoCompleteUnlockFlow:
 
         root_image: Path | VerifiedFileSnapshot | None = None
         if self.install_sakisu_root:
-            ctx.set_progress(31, "准备原槽 init_boot 的 SakiSU 补丁")
-            root_image = self._resolve_sakisu_init_boot(ctx, backups)
-            ctx.ensure_not_cancelled()
+            raise VerificationError("此构建不安装 root 镜像；SakiSU 写入已禁用")
 
         ctx.set_progress(38, "修补本次备份 LK")
         source_lk = ctx.operation_files.copy_input(

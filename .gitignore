@@ -1,3 +1,7 @@
+# Local build aids for the personal Nuitka build
+.nuitka-cache/
+.tmp/
+
 # Python caches and local environments
 __pycache__/
 *.py[cod]

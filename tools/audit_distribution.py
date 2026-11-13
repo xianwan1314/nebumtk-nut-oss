@@ -57,14 +57,6 @@ BASE_REQUIRED_RELEASE_FILES = (
     "platform-tools/adb.exe",
     "platform-tools/fastboot.exe",
     "nebumtk_unlock_tools/lk/libusb/_platform/_windows/x64/libusb-1.0.dll",
-    # The reviewed SakiSU host patcher is a required product asset. Nuitka's
-    # --include-data-dir silently skips .exe data files, so the build copies
-    # this directory explicitly; requiring it here makes a missing patcher a
-    # build failure instead of a release that cannot patch images.
-    "sakisu/official-patcher-windows-x64.exe",
-    "sakisu/official-patcher-windows-x64-manifest.json",
-    "sakisu/official-patcher-arm64",
-    "sakisu/official-patcher-manifest.json",
 )
 REQUIRED_RELEASE_FILES = BASE_REQUIRED_RELEASE_FILES
 

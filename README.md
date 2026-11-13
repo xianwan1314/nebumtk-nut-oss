@@ -88,8 +88,24 @@ python tools\audit_distribution.py dist\nebumtk_unlock_tools.dist
 .\scripts\package-sfx.ps1                 # 可选：打成自解压 exe
 ```
 
+> 本工作区的个人构建已从 `scripts/build.ps1` 去掉 audit 调用，允许把
+> `material/xingc` 放在 exe 旁边；上面第 2 行是公开发布时才需要手动执行的审计。
+
 `scripts/build.ps1` 在 `material/payloads/manifest.json` 存在时会顺带校验 payload
 store；没有 store 就跳过并给出黄色提示。
+
+本工作区的“无提权、假设已有 root、把 Xingc 素材放在 exe 旁边”的个人构建步骤，
+以及本机打包时踩过的 Nuitka/缓存/网络坑，见
+[docs/PERSONAL_BUILD.md](docs/PERSONAL_BUILD.md)。
+
+解锁操作步骤、复制到其他电脑的注意事项与失败处理见
+[docs/UNLOCK-GUIDE.md](docs/UNLOCK-GUIDE.md)。
+
+Xingc 授权链（自己的密钥、patch 后的 LK、token 签名与独立 CLI）见
+[docs/XINGC_AUTHORIZE.md](docs/XINGC_AUTHORIZE.md)。
+
+私有仓库的完整归档（含 `local-dev`、`material`、LK 镜像）提交清单见
+[docs/PRIVATE_REPO.md](docs/PRIVATE_REPO.md)。
 
 ## 边界
 

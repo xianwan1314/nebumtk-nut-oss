@@ -89,6 +89,21 @@ python tools\build_device_catalog.py --regenerate
 `--regenerate` 需要 Android NDK 29.0.14206865（`ANDROID_NDK_HOME` 或
 `%LOCALAPPDATA%\Android\Sdk\ndk\...`）。
 
+如果手头只有一份官方 LK 镜像、没有 `xingc_sources/`，可以用
+`tools/prepare_xingc_lk.py` 从镜像本身推导三个 Xingc 补丁点，生成
+`material/xingc/` 的目录、RSA-2048 密钥对和许可标记，并产出已验证的 patched LK。
+它只读写本地文件，不连接设备：
+
+```powershell
+python tools\prepare_xingc_lk.py --lk imags\lk.img --dry-run
+python tools\prepare_xingc_lk.py --lk imags\lk.img
+python tools\prepare_xingc_lk.py --lk imags\lk.img --check
+```
+
+自动识别只接受已知的 Vivo `veify` 布局；其他布局请用 `--catalog` 指定目录文件。
+生成的 `verify-private.pem` 是这台工具自己的签名私钥，**备份它，不要外传**；换键要
+`--regenerate-key` 并重新生成 patched LK。
+
 ## 4. 运行时行为
 
 - 缺 `material/payloads/manifest.json` → 未登记的 payload 报 `KeyError`/`MaterialError`，

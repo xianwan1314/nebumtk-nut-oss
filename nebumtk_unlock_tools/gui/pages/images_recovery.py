@@ -51,7 +51,8 @@ class ImagesRecoveryPage(QWidget):
             self.task_tab_group.addButton(button, index)
             self.task_tab_buttons.append(button)
             tabs.addWidget(button)
-        self.task_tab_buttons[0].setChecked(True)
+        self.task_tab_buttons[0].setChecked(False)
+        self.task_tab_buttons[0].setVisible(False)
         layout.addWidget(self.task_tabs)
 
         self.task_stack = QStackedWidget()
@@ -61,7 +62,7 @@ class ImagesRecoveryPage(QWidget):
         self.task_stack.addWidget(self._lk_panel())
         layout.addWidget(self.task_stack)
         layout.addStretch(1)
-        self._set_task(0)
+        self._set_task(2)
         self.apply_capabilities(frozenset())
 
     def _intro(self, title: str, summary: str) -> QFrame:
@@ -247,5 +248,5 @@ class ImagesRecoveryPage(QWidget):
         )
         self.task_tab_buttons[1].setVisible(dyn_visible)
         if not dyn_visible and self.task_stack.currentIndex() == 1:
-            self._set_task(0)
+            self._set_task(2)
 # provenance: NBMTK-canary-7f3a91c4e8b2d05f

@@ -1,0 +1,32 @@
+{
+  "catalog": {
+    "path": "C:\\Users\\13745\\Downloads\\nebumtk-nut-oss-main\\material\\xingc\\patch-catalog.json",
+    "sha256": "7cd7be960d65195a0ab4d1ba212df1dce306e28570a8f0310cb9a7e7456b8129"
+  },
+  "created_at": "2026-11-12T07:40:09.384863Z",
+  "detected": {
+    "command_offset": 783585,
+    "key_offset": 1109472,
+    "layout": "unlock2",
+    "log_offset": 823542,
+    "stock_key_sha256": "8d56af28341b535526b818b64f72a1e119c5c19d2ba7397e0e5e66d0cc25cbc9"
+  },
+  "input": {
+    "path": "C:\\Users\\13745\\Downloads\\nebumtk-nut-oss-main\\imags\\lk.img",
+    "sha256": "30927f0fd252c460172d8df75b893b2f570cbc6ccf4f76751c9ae4abc05229dc",
+    "size": 3821568
+  },
+  "operator_key": {
+    "avb_blob_sha256": "eb0469bf61dae473cb1217d8a859d3ac5b15eb9750efc7231a893be426014bb8"
+  },
+  "output": {
+    "path": "C:\\Users\\13745\\Downloads\\nebumtk-nut-oss-main\\imags\\lk_xingc.img",
+    "sha256": "aa37779f6977e7eb6d12d634803be21c472e817412108c24849df53be1ee1f37",
+    "size": 3821568
+  },
+  "tool": "prepare_xingc_lk",
+  "validation": {
+    "checks": 96,
+    "ok": true
+  }
+}

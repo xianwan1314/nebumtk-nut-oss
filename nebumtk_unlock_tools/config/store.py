@@ -12,6 +12,12 @@ from pathlib import Path
 
 SETTINGS_DIR_ENV = "NEBUMTK_SETTINGS_DIR"
 
+# Personal build default: show the test-mode toolbar/model/runtime selectors on
+# a fresh profile (no settings.json, or an unreadable one). An existing
+# settings.json keeps its explicit value; a legacy file without the key stays
+# False rather than silently relaxing matching.
+DEFAULT_TEST_MODE = True
+
 
 def _default_settings_dir() -> Path:
     # An explicit directory wins so tests and portable runs never read (or
@@ -53,11 +59,11 @@ class SettingsStore:
         from ..core.platform_tools import migrate_platform_tools_path
 
         if not self.path.exists():
-            return Settings()
+            return Settings(test_mode_enabled=DEFAULT_TEST_MODE)
         try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
-            return Settings()
+            return Settings(test_mode_enabled=DEFAULT_TEST_MODE)
 
         raw_test_mode = data.get("test_mode_enabled", False)
         test_mode_enabled = (

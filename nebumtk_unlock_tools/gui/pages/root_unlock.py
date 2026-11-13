@@ -390,12 +390,12 @@ class RootUnlockPage(QWidget):
         # ADB left that action impossible to satisfy — and for a brand with no
         # LK patch of its own there was then no way to supply one at all.
         self.lk_tools_section.setVisible(effective_any)
-        self.privilege_section.setVisible(preload and adb_context)
-        self.root_button.setEnabled(preload)
+        self.privilege_section.setVisible(False)
+        self.root_button.setEnabled(False)
         self.manual_section.setVisible(effective_any)
-        self.backup_action_row.setVisible(preload and adb_context)
+        self.backup_action_row.setVisible(adb_context)
 
-        self.auto_flow_button.setVisible(is_vivo and preload and adb_context)
+        self.auto_flow_button.setVisible(is_vivo and adb_context)
         self.honor_auto_button.setVisible(is_honor and adb_context)
 
         if is_vivo:
@@ -434,7 +434,9 @@ class RootUnlockPage(QWidget):
             )
         )
         self.oppo_action_row.setVisible(is_oppo and fastboot_context)
-        self.sakisu_root_checkbox.setVisible(is_vivo and adb_context)
+        self.sakisu_root_checkbox.setVisible(False)
+        self.sakisu_root_checkbox.setEnabled(False)
+        self.sakisu_root_checkbox.setChecked(False)
         self.honor_action_row.setVisible(is_honor and fastboot_context)
         self.xingc_heading.setVisible(xingc_visible and fastboot_context)
         self.xingc_unlock_row.setVisible(xingc_visible and fastboot_context)

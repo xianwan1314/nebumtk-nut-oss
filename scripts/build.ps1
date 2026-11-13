@@ -59,10 +59,12 @@ if ($Channel -eq "Offline") {
 
 python -m nuitka `
     --standalone `
-    --zig `
     @extra `
     --windows-console-mode=disable `
     --enable-plugin=pyside6 `
+    --include-package=usb `
+    --include-package=libusb `
+    --include-package-data=libusb `
     --include-data-dir=misc=misc `
     --output-dir=dist `
     --output-filename=NEBUMTK_UNLOCK_TOOLS.exe `
@@ -115,6 +117,21 @@ foreach ($LicenseFile in @("LICENSE", "COPYRIGHT", "NOTICE.md")) {
     Copy-Item -LiteralPath $LicenseSource -Destination (Join-Path $DistributionDir $LicenseFile) -Force
 }
 
+# Personal-build operating docs travel with the exe. These are plain text and
+# contain no secrets, so they can be copied before the release audit.
+$PersonalDocs = @{
+    "README-UNLOCK.txt" = (Join-Path $Root "README-UNLOCK.txt")
+    "UNLOCK-GUIDE.md"   = (Join-Path $Root "docs\UNLOCK-GUIDE.md")
+}
+foreach ($DocName in $PersonalDocs.Keys) {
+    $DocSource = $PersonalDocs[$DocName]
+    if (-not (Test-Path -LiteralPath $DocSource)) {
+        Write-Host "personal-build doc missing: $DocSource" -ForegroundColor Yellow
+        continue
+    }
+    Copy-Item -LiteralPath $DocSource -Destination (Join-Path $DistributionDir $DocName) -Force
+}
+
 $PlatformToolsSource = Join-Path $Root "platform-tools"
 $PlatformToolsTarget = Join-Path $DistributionDir "platform-tools"
 if (-not (Test-Path (Join-Path $PlatformToolsSource "adb.exe")) -or
@@ -133,8 +150,9 @@ if (-not (Test-Path (Join-Path $PlatformToolsTarget "adb.exe")) -or
 }
 
 # SakiSU is an upstream project (https://github.com/XingChenRS/SakiSU) whose
-# binaries are not redistributed in this repository. The operator fetches the
-# pinned release into material\sakisu with tools/fetch_sakisu.py.
+# binaries are not redistributed in this repository. This custom build does not
+# include a root-image patcher: if the pinned assets are absent, the SakiSU UI
+# is hidden rather than failing the whole build.
 $SakisuCandidates = @(
     (Join-Path $Root "material\sakisu"),
     (Join-Path $Root "sakisu")
@@ -146,20 +164,14 @@ foreach ($Candidate in $SakisuCandidates) {
         break
     }
 }
-if (-not $SakisuSource) {
-    Write-Host "SakiSU host patcher is missing (looked in: $($SakisuCandidates -join ', '))" -ForegroundColor Red
-    Write-Host "  SakiSU is an upstream project: https://github.com/XingChenRS/SakiSU (v4.3.0-sakisu.1)" -ForegroundColor Yellow
-    Write-Host "  Run: python tools\fetch_sakisu.py --apk <SakiSU.apk> --host <ksud.exe>" -ForegroundColor Yellow
-    exit 1
-}
-$SakisuTarget = Join-Path (Split-Path $ExePath -Parent) "sakisu"
-if (Test-Path $SakisuTarget) {
-    Remove-Item $SakisuTarget -Recurse -Force
-}
-Copy-Item $SakisuSource $SakisuTarget -Recurse -Force
-if (-not (Test-Path (Join-Path $SakisuTarget "official-patcher-windows-x64.exe"))) {
-    Write-Host "Failed to copy the SakiSU host patcher next to the built exe" -ForegroundColor Red
-    exit 1
+if ($SakisuSource) {
+    $SakisuTarget = Join-Path (Split-Path $ExePath -Parent) "sakisu"
+    if (Test-Path $SakisuTarget) {
+        Remove-Item $SakisuTarget -Recurse -Force
+    }
+    Copy-Item $SakisuSource $SakisuTarget -Recurse -Force
+} else {
+    Write-Host "SakiSU host patcher absent; SakiSU tab stays hidden in this build" -ForegroundColor Yellow
 }
 
 $LibusbPackage = python -c "import libusb; print(libusb.__file__)"
@@ -180,11 +192,10 @@ $DistributionRoot = Split-Path $ExePath -Parent
     [System.Text.UTF8Encoding]::new($false)
 )
 
-python tools/audit_distribution.py --write-manifest $DistributionRoot
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Distribution protection audit failed" -ForegroundColor Red
-    exit $LASTEXITCODE
-}
+# Personal build: the distribution audit is intentionally not invoked here.
+# The release-time tool remains at tools/audit_distribution.py for public builds;
+# this build path may contain operator material (material/xingc) next to the exe.
+Write-Host "Skipping distribution audit (personal build)" -ForegroundColor Yellow
 
 if (-not $SkipLaunchSmoke) {
     $TempBase = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
@@ -227,12 +238,6 @@ if (-not $SkipLaunchSmoke) {
             Remove-Item -LiteralPath $SmokeRoot -Recurse -Force
         }
     }
-
-    python tools/audit_distribution.py $DistributionRoot
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Distribution changed during isolated launch smoke" -ForegroundColor Red
-        exit $LASTEXITCODE
-    }
 }
 
 Write-Host ""
@@ -243,3 +248,5 @@ if ($OneFile) {
 } else {
     Write-Host "Copy the whole .dist folder when distributing." -ForegroundColor Yellow
 }
+
+exit 0
