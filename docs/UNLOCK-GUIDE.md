@@ -48,6 +48,26 @@ D:\NEBUMTK\nebumtk_unlock_tools.dist\NEBUMTK_UNLOCK_TOOLS.exe
 “工具与设置 → 设置 → 维护测试 → 测试模式”里关闭；已有 settings.json 的机器
 保留原来的选择。
 
+### 先跑自检
+
+不用连设备，先确认签名和随包素材：
+
+```powershell
+.\NEBUMTK_UNLOCK_TOOLS.exe --self-check
+```
+
+它会检查：
+
+- 机型 catalog 的 Ed25519 签名 + 解密；
+- Xingc RSA 私钥/公钥对；
+- `images\lk_xingc.img` 的 patched LK 结构；
+- Xingc protocol permit + libusb 后端；
+- platform-tools 的 adb/fastboot 哈希；
+- `misc` 六个品牌镜像。
+
+结果会打印并写入 exe 同目录的 `self-check.txt`。  
+全部 `[ok]` 才继续后面的设备操作；任何 `[FAIL]` 都先停。
+
 ### 会跟着走的东西
 
 - `material\xingc\`：**包含签名私钥**。复制这个文件夹等于把解锁能力一起复制走；

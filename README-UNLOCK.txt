@@ -15,6 +15,11 @@ NEBUMTK UNLOCK TOOLS — 个人构建说明（无提权版）
   platform-tools\            adb / fastboot
   misc\                      品牌 misc 镜像
 
+自检
+  NEBUMTK_UNLOCK_TOOLS.exe --self-check
+  结果会打印并写入同目录的 self-check.txt；全部 [ok] 才表示
+  机型签名、Xingc 密钥对、patched LK、Xingc 后端和 platform-tools 都正常。
+
 使用前
   1. 首次运行（还没有 settings.json）默认开启测试模式，顶部会显示
      “机型模板 / 运行模板”；不需要可在“工具与设置 → 设置”里关闭。
